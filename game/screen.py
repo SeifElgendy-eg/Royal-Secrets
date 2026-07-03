@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QWidget, QLabel
 from .config import GameConfig, DEFAULT_CONFIG, GAME_BACKGROUND_IMAGE, GAME_FOOTER_IMAGE, BALL_IMAGES
 from .layout import compute_scale_factor
 from .physics import compute_trajectory
+from .questions import QUESTIONS
 from .state import GameState
 from .widgets import SweepMeter, ChestWidget, LaunchBaseWidget
 
@@ -38,10 +39,20 @@ class ChestGameScreen(QWidget):
         self._traj_index = 0
 
         self._current_ball_image_path = self._get_random_ball_image_path()
+        self._launched_ball_path = None
+        self._current_question = None
 
         self.status_label = QLabel(self)
         self.status_label.setStyleSheet("color: #f4e4b8; font-size: 15px; font-weight: bold; background: transparent;")
         self.status_label.move(20, 18)
+
+        self.question_label = QLabel(self)
+        self.question_label.setFont(QFont("Georgia", 16, QFont.Bold))
+        self.question_label.setAlignment(Qt.AlignCenter)
+        self.question_label.setWordWrap(True)
+        self.question_label.setStyleSheet(
+            "color: #f4e4b8; background: rgba(20, 10, 40, 140); border: 2px solid #c9a24b; border-radius: 10px; padding: 8px;"
+        )
 
         self.flash_label = QLabel(self)
         self.flash_label.setFont(QFont("Arial", 16, QFont.Bold))
@@ -203,15 +214,40 @@ class ChestGameScreen(QWidget):
         self.status_label.move(20, 18)
         self.flash_label.move(w // 2 - self.flash_label.width() // 2, cy - 50)
 
+        self._layout_question_label(scale_factor)
+
         self.chest.lower()
         self.footer_label.raise_()
         if self._active_meter:
             self._active_meter.raise_()
         self.launch_base.raise_()
         self.status_label.raise_()
+        self.question_label.raise_()
         self.flash_label.raise_()
         if self._ball:
             self._ball.raise_()
+
+    def _layout_question_label(self, scale_factor: float):
+        w = self.width()
+        if w <= 0:
+            return
+
+        font_size = max(10, int(16 * scale_factor))
+        padding = max(4, int(8 * scale_factor))
+        border = max(1, round(2 * scale_factor))
+        radius = max(4, int(10 * scale_factor))
+
+        self.question_label.setFont(QFont("Georgia", font_size, QFont.Bold))
+        self.question_label.setStyleSheet(
+            f"color: #f4e4b8; background: rgba(20, 10, 40, 140); "
+            f"border: {border}px solid #c9a24b; border-radius: {radius}px; padding: {padding}px;"
+        )
+
+        q_width = min(int(w * 0.85), int(560 * scale_factor))
+        q_width = max(q_width, int(240 * scale_factor))
+        self.question_label.setFixedWidth(q_width)
+        self.question_label.adjustSize()
+        self.question_label.move((w - q_width) // 2, max(8, int(16 * scale_factor)))
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -229,7 +265,16 @@ class ChestGameScreen(QWidget):
         self.status_label.setText(self.state.status_text())
         self.status_label.adjustSize()
 
-    def _start_next_attempt(self):
+    def _pick_next_question(self):
+        choices = [q for q in QUESTIONS if q is not self._current_question] or QUESTIONS
+        self._current_question = random.choice(choices)
+        self.question_label.setText(self._current_question.text)
+        self._layout_question_label(compute_scale_factor(self.width()))
+
+    def _start_next_attempt(self, new_question: bool = True):
+        if new_question or self._current_question is None:
+            self._pick_next_question()
+
         if not self._current_ball_image_path or not self._current_ball_image_path.exists():
             self._current_ball_image_path = self._get_random_ball_image_path()
 
@@ -299,6 +344,7 @@ class ChestGameScreen(QWidget):
 
     def _launch_ball(self, angle_deg: float, power: float):
         self.launch_base.set_loaded_ball(QPixmap())
+        self._launched_ball_path = self._current_ball_image_path
 
         lp = self.get_launch_point()
         self._traj_points = compute_trajectory(angle_deg, power, lp.x(), lp.y(), self.config.gravity)
@@ -381,16 +427,21 @@ class ChestGameScreen(QWidget):
 
         self._traj_index += 1
 
-    def _finish_attempt(self, success: bool):
+    def _finish_attempt(self, landed: bool):
         self._ball_timer.stop()
         self._ball_timer = None
         if self._ball is not None:
             self._ball.deleteLater()
             self._ball = None
 
-        self.state.record_result(success)
-        if success:
+        correct = landed and self._current_question is not None \
+            and self._launched_ball_path == self._current_question.answer_path
+
+        self.state.record_result(correct)
+        if correct:
             self._show_flash("IN! ✨", "#2e7d32")
+        elif landed:
+            self._show_flash("WRONG BALL", "#b45309")
         else:
             self._show_flash("MISS", "#8e2431")
 
@@ -400,7 +451,7 @@ class ChestGameScreen(QWidget):
         if self.state.is_won:
             QTimer.singleShot(flash_ms + 200, self._play_win_sequence)
         else:
-            QTimer.singleShot(flash_ms + 200, self._start_next_attempt)
+            QTimer.singleShot(flash_ms + 200, lambda: self._start_next_attempt(new_question=correct))
 
     def _show_flash(self, text: str, color: str):
         self.flash_label.setText(text)

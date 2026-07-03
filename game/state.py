@@ -17,9 +17,11 @@ class GameState:
         """Call when a ball is launched (angle+power both locked)."""
         self.attempts += 1
 
-    def record_result(self, success: bool) -> None:
-        """Call once the ball's flight resolves (hit or miss)."""
-        if success:
+    def record_result(self, correct: bool) -> None:
+        """Call once the ball's flight resolves. `correct` means the right
+        ball for the current question landed in the chest — a wrong ball
+        landing, or a miss, both count as no point."""
+        if correct:
             self.balls_landed += 1
 
     @property
@@ -27,4 +29,4 @@ class GameState:
         return self.balls_landed >= self.config.balls_to_win
 
     def status_text(self) -> str:
-        return f"Balls landed: {self.balls_landed}/{self.config.balls_to_win}    Attempts: {self.attempts}"
+        return f"Score: {self.balls_landed}/{self.config.balls_to_win}    Attempts: {self.attempts}"

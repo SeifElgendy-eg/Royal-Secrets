@@ -361,3 +361,46 @@ class LaunchBaseWidget(QWidget):
             painter.drawEllipse(QPointF(0, 0), 22, 22)
 
         painter.end()
+        
+class ProductBoxWidget(QWidget):
+    """A widget that holds the prize product image, supporting smooth
+    opacity changes and rotation during the win animation sequence."""
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.pixmap = QPixmap()
+        self.opacity = 1.0
+        self.rotation_deg = 0.0
+        self.setAttribute(Qt.WA_TransparentForMouseEvents)
+        self.hide()
+
+    def setPixmap(self, pixmap: QPixmap):
+        self.pixmap = pixmap
+        self.update()
+
+    def setOpacity(self, opacity: float):
+        self.opacity = max(0.0, min(1.0, opacity))
+        self.update()
+
+    def paintEvent(self, event):
+        if self.pixmap.isNull():
+            return
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QPainter.SmoothPixmapTransform)
+        
+        # Apply opacity level
+        painter.setOpacity(self.opacity)
+        
+        # Move origin to center, rotate, and draw cleanly
+        painter.translate(self.width() / 2.0, self.height() / 2.0)
+        painter.rotate(self.rotation_deg)
+        
+        # Scale image to fit inside the animated widget borders
+        scaled = self.pixmap.scaled(
+            self.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation
+        )
+        painter.drawPixmap(
+            round(-scaled.width() / 2.0),
+            round(-scaled.height() / 2.0),
+            scaled
+        )
