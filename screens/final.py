@@ -263,14 +263,21 @@ class FinalScreen(PalaceBackdrop):
     def _paint_footer(self, painter, rect):
         if self._footer_full.isNull() or self.width() <= 0:
             return
-        # Bottom-anchored to the actual widget, not background_rect() — see
-        # class docstring for why. Horizontal position/scale still follows
-        # the room's own rect so the oil-drop/footer art stays aligned with
-        # the chest and floor beneath it. Always drawn at full opacity —
-        # the footer is the one constant across both phases.
-        width = rect.width() * self._FOOTER_WIDTH_FRAC
+        # Bottom-anchored AND width-anchored to the actual widget, not
+        # background_rect(). rect.width() only equals self.width() while
+        # the window is wider than the background's aspect ratio (the
+        # landscape case this app targets) — once the window gets
+        # narrower/taller than that, background_rect() overflows
+        # horizontally to cover the extra height, and tying the footer's
+        # scale to that overflowing width blew the footer up far past the
+        # widget (pushing its top edge above y=0). Scaling to self.width()
+        # instead — same approach the base PalaceBackdrop footer uses —
+        # keeps the footer correctly sized at every window shape; it's
+        # only pixel-identical to the old rect-based alignment in the
+        # landscape case anyway, so normal usage is unaffected.
+        width = self.width() * self._FOOTER_WIDTH_FRAC
         height = width / self._footer_aspect
-        target = QRectF(rect.x(), self.height() - height, width, height)
+        target = QRectF(0, self.height() - height, width, height)
         painter.drawPixmap(target.toRect(), self._footer_full, self._footer_full.rect())
 
     def _paint_key(self, painter, rect):
