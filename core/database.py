@@ -9,12 +9,21 @@ once the event is over.
 import csv
 import os
 import sqlite3
+import sys
 from datetime import datetime, timezone
 
-# data/registrations.db lives next to the project root, one level up from core/
-DB_PATH = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "registrations.db"
-)
+# data/registrations.db lives next to the app so registrations survive
+# between runs. When running from source that's the project root (one
+# level up from core/). When frozen by PyInstaller, __file__ resolves
+# inside the temp _MEIPASS extraction folder instead, which is wiped
+# after the app closes — so in that case anchor to the real exe's own
+# folder instead, so the data directory persists alongside it.
+if getattr(sys, "frozen", False):
+    _APP_ROOT = os.path.dirname(os.path.abspath(sys.executable))
+else:
+    _APP_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+DB_PATH = os.path.join(_APP_ROOT, "data", "registrations.db")
 
 
 def _get_connection() -> sqlite3.Connection:

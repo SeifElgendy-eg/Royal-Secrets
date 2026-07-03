@@ -6,10 +6,18 @@ tweak — swap an image, add an area, change the sponsor copy — happens in
 exactly one place instead of being hunted down across files.
 """
 
+import sys
 from pathlib import Path
 
-# core/config.py -> core/ -> project root
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+# core/config.py -> core/ -> project root when running from source.
+# When frozen by PyInstaller (--onefile or --onedir), bundled data files
+# are unpacked into sys._MEIPASS at runtime instead — __file__-based
+# resolution isn't reliable inside a frozen build, so branch explicitly.
+if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+    PROJECT_ROOT = Path(sys._MEIPASS)
+else:
+    PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
 ASSETS_DIR = PROJECT_ROOT / "assets"
 
 # --- Registration + Royal Room screen art ------------------------------------
