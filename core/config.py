@@ -42,3 +42,14 @@ EGYPT_AREAS = [
 PRODUCT_EMOJI = "🎀"
 PRODUCT_NAME = "Perfectil Original"
 PRODUCT_TAGLINE = "Beauty from within — Skin, Hair, Nails"
+
+# --- Final (win reveal) screen art ---------------------------------------------
+# The room reuses BACKGROUND_IMAGE (the same clean palace room the chest
+# minigame stands in front of). FINAL_CHEST_IMAGE and FINAL_FOOTER_IMAGE are
+# both exported at the *same* canvas size/aspect as that room and as each
+# other, so they can be drawn at the exact same rect as the background with
+# no extra alignment math — see FinalScreen.paintEvent(). FINAL_PRODUCT_IMAGE
+# is a standalone product cutout (not canvas-aligned) positioned by fraction.
+FINAL_CHEST_IMAGE = ASSETS_DIR / "box0003.png"
+FINAL_FOOTER_IMAGE = ASSETS_DIR / "footer0003.png"
+FINAL_PRODUCT_IMAGE = ASSETS_DIR / "product_box.png"

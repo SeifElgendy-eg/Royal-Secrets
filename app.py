@@ -33,8 +33,10 @@ class MainWindow(QMainWindow):
         # Organizer-only shortcuts (deliberately hidden — no visible buttons):
         #   Ctrl+Shift+E -> export all registrations to CSV
         #   Ctrl+Shift+R -> reset the app back to Registration for the next player
+        #   Ctrl+Shift+F -> jump straight to the Final screen (dev/preview only)
         QShortcut(QKeySequence("Ctrl+Shift+E"), self).activated.connect(self._on_export_csv)
         QShortcut(QKeySequence("Ctrl+Shift+R"), self).activated.connect(self._reset_to_registration)
+        QShortcut(QKeySequence("Ctrl+Shift+F"), self).activated.connect(self._jump_to_final)
 
     def _on_registration_complete(self, name: str):
         self.royal_room_screen.set_player_name(name)
@@ -56,6 +58,11 @@ class MainWindow(QMainWindow):
 
     def _reset_to_registration(self):
         self.stack.setCurrentWidget(self.registration_screen)
+
+    def _jump_to_final(self):
+        """Dev/preview only — lets you see the final reveal without playing
+        through registration and the minigame first."""
+        self.stack.setCurrentWidget(self.final_screen)
 
     def _on_export_csv(self):
         """Ctrl+Shift+E — dump every registration collected so far to a CSV
