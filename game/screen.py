@@ -80,15 +80,7 @@ class ChestGameScreen(QWidget):
             self.launch_base.set_loaded_ball(QPixmap())
 
     def _update_base_tracking(self):
-        if self._ball is not None and not self._ball.isHidden():
-            bx = self._ball.x() + self._ball.width() / 2
-            by = self._ball.y() + self._ball.height() / 2
-            lp = self.get_launch_point()
-            dx = bx - lp.x()
-            dy = lp.y() - by
-            if dx != 0 or dy != 0:
-                self.launch_base.set_angle(math.degrees(math.atan2(dy, dx)))
-        elif self._active_meter:
+        if self._active_meter:
             tilt_max = self.config.launch_tilt_max_deg
             if self._active_meter.title == "Angle":
                 tilt_deg = -tilt_max + self._active_meter._value * (2 * tilt_max)
@@ -96,8 +88,9 @@ class ChestGameScreen(QWidget):
             elif self._active_meter.title == "Power":
                 tilt_deg = -tilt_max + self._angle_value * (2 * tilt_max)
                 self.launch_base.set_angle(90 - tilt_deg)
-        else:
-            self.launch_base.set_angle(90)
+        # else: no active meter — leave the barrel exactly where it was.
+        # This keeps it fixed at the fired angle during flight and between
+        # shots, instead of tracking the ball or snapping back to vertical.
 
     def _step_intro_pop(self):
         self._intro_frame += 1
@@ -193,8 +186,19 @@ class ChestGameScreen(QWidget):
 
             self._active_meter.setGeometry(mx, my, self._active_meter.width(), self._active_meter.height())
 
+        self.launch_base.update_scale(scale_factor)
+
         lp = self.get_launch_point()
-        self.launch_base.move(lp.x() - self.launch_base.width() // 2, lp.y() - 30)
+        # Anchor to the window's bottom edge (not to lp.y(), which moves
+        # independently) so the cannon touches/overhangs the edge. The
+        # overhang is *inverse* to page scale: a smaller cannon sits lower
+        # (dips further past the edge) than a bigger one, which otherwise
+        # looked like it was floating too high relative to its own size on
+        # small windows.
+        t = self.launch_base.normalized_scale
+        overhang = int(35 - t * 20)  # 35px when smallest, 15px when largest
+        target_y = h - self.launch_base.height() + overhang
+        self.launch_base.move(lp.x() - self.launch_base.width() // 2, target_y)
 
         self.status_label.move(20, 18)
         self.flash_label.move(w // 2 - self.flash_label.width() // 2, cy - 50)
@@ -314,7 +318,16 @@ class ChestGameScreen(QWidget):
 
         self._ball_timer = QTimer(self)
         self._ball_timer.timeout.connect(self._step_ball)
-        self._ball_timer.start(16)
+
+        # Position/paint the ball at its true first trajectory point *now*,
+        # synchronously — otherwise it sits at the QLabel's default (0, 0)
+        # until the timer's first tick fires, and the independent
+        # _base_tracking_timer can catch that stale position in between,
+        # snapping the barrel toward the corner for a frame right as we fire.
+        self._step_ball()
+
+        if self._ball_timer is not None:
+            self._ball_timer.start(16)
 
     def _step_ball(self):
         if self._traj_index >= len(self._traj_points):
@@ -350,6 +363,11 @@ class ChestGameScreen(QWidget):
                 border-radius: {current_radius}px;
                 border: 2px solid rgba(255,255,255,0.6);
             """)
+
+        if is_going_down:
+            self._ball.stackUnder(self.footer_label)
+        else:
+            self._ball.raise_()
 
         target_box = self.chest.target_rect_in_parent()
         if target_box.contains(QPointF(x, y)):

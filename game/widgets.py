@@ -249,14 +249,60 @@ class ChestWidget(QWidget):
 
 class LaunchBaseWidget(QWidget):
     """Pure cannon art — angle-rotated barrel + loaded-ball display. No
-    difficulty-relevant numbers live here, only drawing geometry."""
+    difficulty-relevant numbers live here, only drawing geometry.
+
+    All the drawing coordinates below (base stand, barrel, pivot, loaded
+    ball) were designed for a 180x180 widget. `update_scale()` applies the
+    page's own responsive scale_factor — same pattern as
+    SweepMeter.update_scale() — so the cannon grows and shrinks along with
+    everything else on resize instead of staying pinned to a fixed pixel
+    size.
+
+    The art multiplier itself isn't flat: it interpolates from
+    `_ART_SCALE_MIN` at the smallest page scale up to `_ART_SCALE_MAX` at
+    the largest, so small windows get the old, more modest cannon size
+    while large windows get today's bigger one — rather than shifting the
+    whole range up or down uniformly.
+    """
+
+    _BASE_SIZE = 180
+    _PAGE_SCALE_MIN = 0.4
+    _PAGE_SCALE_MAX = 1.5
+    _ART_SCALE_MIN = 0.6   # size at the smallest window (matches the old, smaller cannon)
+    _ART_SCALE_MAX = 0.9   # size at the largest window (matches the current bigger cannon)
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setFixedSize(180, 180)
+        self.page_scale = 1.0
+        self._apply_size()
         self.angle_deg = 90.0
         self.loaded_ball_pixmap = QPixmap()
         self.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+
+    @property
+    def normalized_scale(self) -> float:
+        """0.0 at the smallest page scale, 1.0 at the largest — lets callers
+        (like ChestGameScreen's positioning logic) key off how big the
+        cannon currently is without reaching into private constants."""
+        span = self._PAGE_SCALE_MAX - self._PAGE_SCALE_MIN
+        t = (self.page_scale - self._PAGE_SCALE_MIN) / span if span else 0.0
+        return max(0.0, min(t, 1.0))
+
+    @property
+    def scale(self) -> float:
+        t = self.normalized_scale
+        art_scale = self._ART_SCALE_MIN + t * (self._ART_SCALE_MAX - self._ART_SCALE_MIN)
+        return art_scale * self.page_scale
+
+    def _apply_size(self):
+        size = int(self._BASE_SIZE * self.scale)
+        self.setFixedSize(size, size)
+
+    def update_scale(self, page_scale_factor: float):
+        self.page_scale = max(self._PAGE_SCALE_MIN, min(page_scale_factor, self._PAGE_SCALE_MAX))
+        self._apply_size()
+        self.update()
+
 
     def set_angle(self, angle):
         self.angle_deg = angle
@@ -272,9 +318,10 @@ class LaunchBaseWidget(QWidget):
         painter.setRenderHint(QPainter.SmoothPixmapTransform)
 
         w, h = self.width(), self.height()
-        cx, cy = w / 2, h / 2 + 30
+        cx, cy = w / 2, h / 2 + 30 * self.scale
 
         painter.translate(cx, cy)
+        painter.scale(self.scale, self.scale)
 
         # 1. Base Stand
         painter.setPen(QPen(QColor("#1a1025"), 3))
