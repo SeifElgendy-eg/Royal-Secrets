@@ -1,0 +1,32 @@
+name: Build Windows exe
+
+# Runs on an actual Windows machine (GitHub-hosted runner) so PyInstaller
+# produces a real .exe, not a Linux binary. Trigger it either by pushing
+# to main or manually from the Actions tab (Run workflow button) —
+# useful when you just want a fresh build without a code change.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Build exe
+        run: pyinstaller RoyalSecrets.spec
+
+      - name: Upload exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: RoyalSecrets-windows
+          path: dist/RoyalSecrets.exe
