@@ -1,0 +1,40 @@
+# ==========================================
+# Python Basics & Virtual Environments
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.env
+*.bak
+*.tmp
+
+# ==========================================
+# Qt & Qt Creator Specifics
+# ==========================================
+# User-specific project settings (never commit these)
+*.pro.user
+*.pro.user.*
+*.pyproject.user
+
+# CMake build directories often used by Qt Creator
+/build/
+build-*/
+
+# ==========================================
+# Compiled Qt UI & Resource Files (Optional)
+# ==========================================
+# Uncomment these if you auto-compile .ui/.qrc to .py 
+# and do not want the generated .py files in your repo
+# ui_*.py
+# *_rc.py
+
+# ==========================================
+# IDEs and Editors
+# ==========================================
+.vscode/
+.idea/
+*.swp
+*~
