@@ -53,3 +53,9 @@ PRODUCT_TAGLINE = "Beauty from within — Skin, Hair, Nails"
 FINAL_CHEST_IMAGE = ASSETS_DIR / "box0003.png"
 FINAL_FOOTER_IMAGE = ASSETS_DIR / "footer0003.png"
 FINAL_PRODUCT_IMAGE = ASSETS_DIR / "product_box.png"
+
+# Phase 2 of the final screen: once the chest reveal has held a moment,
+# the backdrop crossfades to this lifestyle shot (chest/product/key/tagline
+# all baked into the art itself, so the phase-1 overlays just fade out
+# alongside the room). Same canvas size/aspect as BACKGROUND_IMAGE.
+FINAL_LIFESTYLE_IMAGE = ASSETS_DIR / "background0003.png"

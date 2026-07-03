@@ -27,28 +27,12 @@ GAME_FOOTER_IMAGE = ASSETS_DIR / "footer0002.png"
 CHEST_ART_IMAGE = ASSETS_DIR / "box0001.png"
 METER_PILL_IMAGE = ASSETS_DIR / "qband0001.png"
 
-# --- Win-reveal art & layout constants -----------------------------------
-WIN_CHEST_ART_IMAGE = ASSETS_DIR / "box0003.png"
-WIN_FOOTER_IMAGE = ASSETS_DIR / "footer-0001.png"
-PRODUCT_BOX_IMAGE = ASSETS_DIR / "product0001.png"
-WIN_LIFESTYLE_BACKGROUND_IMAGE = ASSETS_DIR / "background0003.png"
+# Note: the win-reveal screen (FinalScreen) has its own art paths in
+# core/config.py (FINAL_CHEST_IMAGE, FINAL_FOOTER_IMAGE, FINAL_PRODUCT_IMAGE,
+# FINAL_LIFESTYLE_IMAGE) and its own placement/timing constants as class
+# attributes on FinalScreen itself — nothing here in the minigame's config
+# feeds that screen, so don't add win-reveal knobs in this file.
 
-# Fractions relative to chest size determining where the product box springs out
-PRODUCT_BOX_LEFT_FRAC = 0.2
-PRODUCT_BOX_RIGHT_FRAC = 0.8
-PRODUCT_BOX_TOP_FRAC = -0.4
-PRODUCT_BOX_BOTTOM_FRAC = 0.5
-PRODUCT_BOX_ROTATION_DEG = -5.0
-
-# Top-right decorative key dimensions on the final screen
-WIN_KEY_WIDTH_FRAC = 0.15
-WIN_KEY_RIGHT_MARGIN_FRAC = 0.05
-WIN_KEY_TOP_MARGIN_FRAC = 0.05
-WIN_KEY_ROTATION_DEG = 25.0
-
-# Timers for the screen transitions
-WIN_REVEAL_HOLD_MS = 2500  # How long the chest glows before crossfading
-WIN_CROSSFADE_MS = 1000    # How long the crossfade animation takes
 # Load standard 7 balls
 BALL_IMAGES = [ASSETS_DIR / f"ball000{i}.png" for i in range(1, 8)]
 # Duplicate the last ball to guarantee 8 balls for the split-rack layout
