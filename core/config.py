@@ -1,0 +1,44 @@
+"""Project-wide paths and constants shared across screens and the game.
+
+Centralizing these means every module (regardless of how deep it sits in
+the package tree) locates assets the same way, and every visual/content
+tweak — swap an image, add an area, change the sponsor copy — happens in
+exactly one place instead of being hunted down across files.
+"""
+
+from pathlib import Path
+
+# core/config.py -> core/ -> project root
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+ASSETS_DIR = PROJECT_ROOT / "assets"
+
+# --- Registration + Royal Room screen art ------------------------------------
+BACKGROUND_IMAGE = ASSETS_DIR / "background0001.png"
+FOOTER_IMAGE = ASSETS_DIR / "footer-0001.png"
+BAND_IMAGE = ASSETS_DIR / "band.png"
+ROYAL_ROOM_BACKGROUND = ASSETS_DIR / "background0002.png"
+KEY_IMAGE = ASSETS_DIR / "key0001.png"
+
+# --- Registration form validation --------------------------------------------
+# Egyptian mobile numbers: 01 + [0,1,2,5] + 8 digits = 11 digits total
+
+EGYPT_MOBILE_REGEX = r"^01[0125]\d{8}$"
+
+# Simple, permissive email check — good enough to catch typos without being
+# a strict RFC 5322 parser (which would reject plenty of valid addresses).
+EMAIL_REGEX = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
+
+EGYPT_AREAS = [
+    "Cairo", "Giza", "Alexandria", "Qalyubia", "Sharqia",
+    "Dakahlia", "Gharbia", "Monufia", "Beheira", "Kafr El Sheikh",
+    "Damietta", "Port Said", "Ismailia", "Suez", "North Sinai",
+    "South Sinai", "Faiyum", "Beni Suef", "Minya", "Asyut",
+    "Sohag", "Qena", "Luxor", "Aswan", "Red Sea", "New Valley", "Matrouh",
+]
+
+# --- Final screen sponsor content ---------------------------------------------
+# Was hardcoded inside FinalScreen. Pulled out here so a sponsor swap is a
+# one-line change instead of a UI-code edit.
+PRODUCT_EMOJI = "🎀"
+PRODUCT_NAME = "Perfectil Original"
+PRODUCT_TAGLINE = "Beauty from within — Skin, Hair, Nails"
